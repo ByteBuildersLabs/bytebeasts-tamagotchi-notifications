@@ -1,2 +1,5 @@
-cd /Users/danielvillatoro/Documents/ByteBuilders/bytebeasts-tamagotchi-notifications
+cd /Users/danielvillatoro/Documents/ByteBuilders/TamagotchiLatest/bytebeasts-tamagotchi-notifications/bytebeasts-tamagotchi-notifications
 firebase deploy --only functions
+
+
+

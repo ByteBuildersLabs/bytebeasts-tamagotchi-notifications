@@ -11,7 +11,7 @@ const firestore = getFirestore(app);
 
 // Configure Apollo Client to query the Torii GraphQL API
 const client = new ApolloClient({
-  uri: "https://api.cartridge.gg/x/bytebeaststamagotchisepolia/torii/graphql",
+  uri: "https://api.cartridge.gg/x/newbbtamagotchiachiev/torii/graphql",
   cache: new InMemoryCache(),
   fetch,
 });

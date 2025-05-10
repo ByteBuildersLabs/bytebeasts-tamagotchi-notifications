@@ -248,7 +248,7 @@ exports.checkBeast = onSchedule(
         let lastNotifiedTime = 0;
         try {
           const lastNotifiedDoc = await firestore
-            .collection("lastnotified")
+            .collection("lastnotified1")
             .doc(player)
             .get();
           lastNotifiedTime = lastNotifiedDoc.exists
@@ -324,7 +324,7 @@ exports.checkBeast = onSchedule(
           // Update last notified time in Firestore
           try {
             await firestore
-              .collection("lastnotified")
+              .collection("lastnotified1")
               .doc(player)
               .set({
                 timestamp: now,
@@ -342,6 +342,9 @@ exports.checkBeast = onSchedule(
     }
   }
 );
+
+
+
 
 // const { onSchedule } = require("firebase-functions/v2/scheduler");
 // const functions = require("firebase-functions");

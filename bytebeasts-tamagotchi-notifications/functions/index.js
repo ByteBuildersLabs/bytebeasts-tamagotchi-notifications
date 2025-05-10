@@ -72,7 +72,17 @@ const TEST_FCM_TOKEN = "fAU1e5l3h3LH3IvL-oopuG:APA91bEyIf3TgVqh-bNBVP3-lsH0Sav-B
 // Function to calculate real-time beast status based on timestamp
 function calculateTimestampBasedStatus(beast, currentTimestamp) {
   const status = { ...beast }; // Create a copy of the beast status
-  const totalSeconds = Math.floor((currentTimestamp - status.last_timestamp) / 1000); // Convert ms to seconds
+
+  // Convert last_timestamp from hex string to decimal (in milliseconds)
+  let lastTimestampMs;
+  if (typeof status.last_timestamp === 'string' && status.last_timestamp.startsWith('0x')) {
+    const lastTimestampSec = parseInt(status.last_timestamp, 16); // Convert hex to decimal (seconds)
+    lastTimestampMs = lastTimestampSec * 1000; // Convert seconds to milliseconds
+  } else {
+    lastTimestampMs = Number(status.last_timestamp) * 1000; // Assume seconds if not hex
+  }
+
+  const totalSeconds = Math.floor((currentTimestamp - lastTimestampMs) / 1000); // Convert ms to seconds
   const totalPoints = Math.floor(totalSeconds / 180); // One point every 3 minutes
   const totalEnergyPoints = Math.floor(totalSeconds / 360); // One point every 6 minutes
 
@@ -245,8 +255,12 @@ exports.checkBeast = onSchedule(
             ? lastNotifiedDoc.data().timestamp || 0
             : 0;
         } catch (firestoreError) {
-          console.error(`Error reading lastnotified for player ${player}:`, firestoreError);
-          continue;
+          if (firestoreError.code === 5) { // Handle NOT_FOUND error
+            lastNotifiedTime = 0; // No previous notification, proceed
+          } else {
+            console.error(`Error reading lastnotified for player ${player}:`, firestoreError);
+            continue; // Skip on other Firestore errors
+          }
         }
 
         const now = Date.now();

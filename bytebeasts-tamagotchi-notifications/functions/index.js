@@ -226,6 +226,9 @@ exports.checkBeast = onSchedule(
       }
       console.log("Fetched TamagotchiPushTokenModels:", pushTokens);
 
+      // Track notified players to avoid duplicate notifications
+      const notifiedPlayers = new Set();
+
       // Analyze beast status and send notifications
       const currentTimestamp = Date.now();
       for (const beast of beastStatuses) {
@@ -236,6 +239,11 @@ exports.checkBeast = onSchedule(
 
         if (!player) {
           console.log(`No player address found for beast_id: ${beast_id}`);
+          continue;
+        }
+
+        if (notifiedPlayers.has(player)) {
+          console.log(`Skipping duplicate notification for player ${player}`);
           continue;
         }
 
@@ -255,53 +263,34 @@ exports.checkBeast = onSchedule(
           continue;
         }
 
-        const messages = [];
+        // Combine all messages into a single notification
+        let title = "⚠️ Your Beast Needs Attention!";
+        let bodyParts = [];
 
         if (!is_alive) {
-          messages.push({
-            title: "💔 Your Beast Needs Help!",
-            body: "Oh no! Your beast has fainted. Hash a new one now! 🏥",
-          });
+          bodyParts.push("Oh no! Your beast has fainted. Hash a new one now! 🏥");
         } else {
-          if (hunger < 50) {
-            messages.push({
-              title: "🍽️ Your Beast is Hungry!",
-              body: `Your beast's hunger is low (${hunger}/100). Feed it now! 🥐`,
-            });
-          }
-          if (energy < 50) {
-            messages.push({
-              title: "⚡ Your Beast is Tired!",
-              body: `Your beast's energy is low (${energy}/100). Let it rest! 💤`,
-            });
-          }
-          if (happiness < 50) {
-            messages.push({
-              title: "😢 Your Beast is Sad!",
-              body: `Your beast's happiness is low (${happiness}/100). Play with it! 🎉`,
-            });
-          }
-          if (hygiene < 50) {
-            messages.push({
-              title: "🛁 Your Beast Needs a Bath!",
-              body: `Your beast's hygiene is low (${hygiene}/100). Clean it up! 🧼`,
-            });
-          }
+          if (hunger < 50) bodyParts.push(`Hunger is low (${hunger}/100). Feed it! 🥐`);
+          if (energy < 50) bodyParts.push(`Energy is low (${energy}/100). Let it rest! 💤`);
+          if (happiness < 50) bodyParts.push(`Happiness is low (${happiness}/100). Play with it! 🎉`);
+          if (hygiene < 50) bodyParts.push(`Hygiene is low (${hygiene}/100). Clean it! 🧼`);
         }
 
-        for (const message of messages) {
+        if (bodyParts.length > 0) {
+          const body = bodyParts.join(" | ");
           const payload = {
             notification: {
-              title: message.title,
-              body: message.body,
+              title: title,
+              body: body,
             },
             token: playerToken,
           };
 
           await messaging.send(payload);
-          console.log(`Notification sent for beast_id: ${beast_id} (player_address: ${player})`, message);
+          console.log(`Notification sent for beast_id: ${beast_id} (player_address: ${player})`, { title, body });
 
           await updateLastNotified(player, now);
+          notifiedPlayers.add(player); // Mark player as notified
         }
       }
 
@@ -312,7 +301,6 @@ exports.checkBeast = onSchedule(
     }
   }
 );
-
 
 
 
